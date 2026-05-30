@@ -2,6 +2,7 @@
 Pipeline Orchestrator
 Backward-compatible entry point that delegates to the OOP ScoringPipeline.
 """
+
 from __future__ import annotations
 
 import os

@@ -4,6 +4,7 @@ Abstract base classes for pipeline stages.
 Implements the Template Method pattern: each stage defines a common interface
 (validate → execute → report), and concrete stages override the core logic.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -16,6 +17,7 @@ from src.pipeline.logging_config import logger
 @dataclass
 class StageResult:
     """Standard output wrapper from any pipeline stage."""
+
     data: Any
     metrics: Dict[str, Any] = field(default_factory=dict)
     stage_name: str = ""

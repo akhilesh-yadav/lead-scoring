@@ -2,6 +2,7 @@
 Structured logging to stdout as an unbuffered event stream (12-factor XI).
 Level controlled via LOG_LEVEL env var.
 """
+
 import logging
 import os
 import sys

@@ -2,6 +2,7 @@
 Generate a reference Excel workbook documenting the scoring/ranking logic.
 Shows all rules, weights, formulas, lookup tables, and example calculations.
 """
+
 import os
 
 from openpyxl import Workbook
@@ -21,8 +22,10 @@ warm_fill = PatternFill(start_color="FEF9E7", end_color="FEF9E7", fill_type="sol
 nurture_fill = PatternFill(start_color="D4EFDF", end_color="D4EFDF", fill_type="solid")
 cold_fill = PatternFill(start_color="EAECEE", end_color="EAECEE", fill_type="solid")
 thin_border = Border(
-    left=Side(style="thin"), right=Side(style="thin"),
-    top=Side(style="thin"), bottom=Side(style="thin"),
+    left=Side(style="thin"),
+    right=Side(style="thin"),
+    top=Side(style="thin"),
+    bottom=Side(style="thin"),
 )
 
 
@@ -152,15 +155,32 @@ style_header(ws2, 7, 3)
 
 ws2["A20"] = "ENGAGEMENT SCORING FORMULA"
 ws2["A20"].font = section_font
-ws2["A21"] = "raw_score = (recency × 0.4) + (volume × 0.3) + diversity_bonus + high_value_bonus - automation_penalty"
+ws2["A21"] = (
+    "raw_score = (recency × 0.4) + (volume × 0.3) + diversity_bonus + high_value_bonus - automation_penalty"
+)
 ws2["A21"].fill = formula_fill
 
 components = [
     ["Sub-Component", "Formula", "Cap", "Notes"],
-    ["Recency", "100 × EXP(-0.693 × days / 45)", "100", "Exponential decay from last REAL engagement"],
-    ["Volume", "(engagements_30d × 20) + (engagements_90d × 5)", "100", "Diminishing returns via cap"],
+    [
+        "Recency",
+        "100 × EXP(-0.693 × days / 45)",
+        "100",
+        "Exponential decay from last REAL engagement",
+    ],
+    [
+        "Volume",
+        "(engagements_30d × 20) + (engagements_90d × 5)",
+        "100",
+        "Diminishing returns via cap",
+    ],
     ["Diversity Bonus", "unique_campaign_types × 10", "30", "Rewards multi-channel engagement"],
-    ["High-Value Bonus", "(webinars × 15) + (events × 20) + (content × 10)", "40", "Premium engagement types"],
+    [
+        "High-Value Bonus",
+        "(webinars × 15) + (events × 20) + (content × 10)",
+        "40",
+        "Premium engagement types",
+    ],
     ["Automation Penalty", "automation_ratio × 30", "30", "Deducted; penalizes email-only sends"],
 ]
 for i, row in enumerate(components, start=23):
@@ -238,10 +258,38 @@ ws3["A28"] = "EXAMPLE CALCULATIONS"
 ws3["A28"].font = section_font
 examples = [
     ["Record", "Level", "Persona", "Title?", "Persona?", "Score"],
-    ["VP Security at ICP account", "VP (0.85)", "CISO (1.0)", "Yes (+10)", "Yes (+10)", "42.5 + 50 + 20 = 100 (capped)"],
-    ["Director of IT", "Director (0.7)", "Technical Buyer (0.9)", "Yes (+10)", "Yes (+10)", "35 + 45 + 20 = 100 (capped)"],
-    ["Unknown title, unknown persona", "NULL (0.2)", "NULL (0.2)", "No (+0)", "No (+0)", "10 + 10 + 0 = 20"],
-    ["Manager, Security Engineer", "Manager (0.5)", "Security Eng (0.5)", "Yes (+10)", "Yes (+10)", "25 + 25 + 20 = 70"],
+    [
+        "VP Security at ICP account",
+        "VP (0.85)",
+        "CISO (1.0)",
+        "Yes (+10)",
+        "Yes (+10)",
+        "42.5 + 50 + 20 = 100 (capped)",
+    ],
+    [
+        "Director of IT",
+        "Director (0.7)",
+        "Technical Buyer (0.9)",
+        "Yes (+10)",
+        "Yes (+10)",
+        "35 + 45 + 20 = 100 (capped)",
+    ],
+    [
+        "Unknown title, unknown persona",
+        "NULL (0.2)",
+        "NULL (0.2)",
+        "No (+0)",
+        "No (+0)",
+        "10 + 10 + 0 = 20",
+    ],
+    [
+        "Manager, Security Engineer",
+        "Manager (0.5)",
+        "Security Eng (0.5)",
+        "Yes (+10)",
+        "Yes (+10)",
+        "25 + 25 + 20 = 70",
+    ],
 ]
 for i, row in enumerate(examples, start=29):
     for j, val in enumerate(row, start=1):
@@ -269,11 +317,26 @@ ws4["A6"] = "COMPONENT BREAKDOWN"
 ws4["A6"].font = section_font
 acct_rules = [
     ["Signal", "Points", "Condition", "Rationale"],
-    ["Named Account", "+30", "is_named_account = True", "Manually curated target list (~2000 companies)"],
-    ["ICP Qualified", "+25", "is_icp_qualified = True", "Firmographic match to ideal customer profile"],
+    [
+        "Named Account",
+        "+30",
+        "is_named_account = True",
+        "Manually curated target list (~2000 companies)",
+    ],
+    [
+        "ICP Qualified",
+        "+25",
+        "is_icp_qualified = True",
+        "Firmographic match to ideal customer profile",
+    ],
     ["Intent Score", "0-30", "intent_score / 100 × 30", "Third-party intent data (6sense/Bombora)"],
     ["Company Size", "0-15", "(employee_score + revenue_score) × 7.5", "Larger = more budget/need"],
-    ["Lead Baseline", "15 (fixed)", "Entity has no account_id", "Prevents unfair lead disadvantage"],
+    [
+        "Lead Baseline",
+        "15 (fixed)",
+        "Entity has no account_id",
+        "Prevents unfair lead disadvantage",
+    ],
 ]
 for i, row in enumerate(acct_rules, start=7):
     for j, val in enumerate(row, start=1):
@@ -368,7 +431,9 @@ for i, row in enumerate(contact_excl, start=14):
         ws6.cell(row=i, column=j, value=val).border = thin_border
 style_header(ws6, 14, 3)
 
-ws6["A21"] = "IMPORTANT: Excluded records are removed from the callable list but retain their score."
+ws6["A21"] = (
+    "IMPORTANT: Excluded records are removed from the callable list but retain their score."
+)
 ws6["A22"] = "This lets analysts ask: 'What would this competitor score if they were a prospect?'"
 
 auto_width(ws6)
@@ -382,28 +447,127 @@ ws7["A1"] = "WORKED EXAMPLES — Full Score Calculation"
 ws7["A1"].font = Font(bold=True, size=14)
 
 examples_full = [
-    ["#", "Persona", "Eng Score", "Profile Score", "Account Score", "Momentum Score",
-     "Readiness Score", "Tier", "Excluded?"],
-    [1, "VP Security, named ICP, 3 webinars this month",
-     85, 100, 95, 80, "85×.4+100×.25+95×.2+80×.15=90.0", "Hot", "No"],
-    [2, "Same profile, engagement >6 months old",
-     8, 100, 95, 0, "8×.4+100×.25+95×.2+0×.15=47.2", "Warm", "No"],
-    [3, "Junior analyst, 15 responses in 30 days",
-     92, 35, 15, 90, "92×.4+35×.25+15×.2+90×.15=62.1", "Warm", "No"],
-    [4, "CISO Fortune 500, zero engagement",
-     0, 100, 85, 0, "0×.4+100×.25+85×.2+0×.15=42.0", "Nurture", "No"],
-    [5, "Competitor, high engagement",
-     88, 40, 15, 60, "88×.4+40×.25+15×.2+60×.15=57.2", "Warm", "YES — Competitor"],
-    [6, "Bounced+opted out, recent event",
-     70, 45, 15, 50, "70×.4+45×.25+15×.2+50×.15=49.8", "Warm", "YES — Bounced+OptOut"],
-    [7, "Broken conversion link, split engagement",
-     30, 60, 15, 0, "30×.4+60×.25+15×.2+0×.15=30.0", "Nurture", "No — but DQ flagged"],
-    [8, "40 campaigns, 38 auto emails (DQ-8)",
-     12, 50, 15, 0, "12×.4+50×.25+15×.2+0×.15=20.3", "Nurture", "No"],
-    [9, "Re-MQL'd 4 times (cycling)",
-     55, 45, 15, 40, "55×.4+45×.25+15×.2+40×.15=42.3", "Nurture", "No"],
-    [10, "CC contact, high-intent named acct, 2 form fills",
-     60, 70, 90, 45, "60×.4+70×.25+90×.2+45×.15=66.3", "Warm", "No"],
+    [
+        "#",
+        "Persona",
+        "Eng Score",
+        "Profile Score",
+        "Account Score",
+        "Momentum Score",
+        "Readiness Score",
+        "Tier",
+        "Excluded?",
+    ],
+    [
+        1,
+        "VP Security, named ICP, 3 webinars this month",
+        85,
+        100,
+        95,
+        80,
+        "85×.4+100×.25+95×.2+80×.15=90.0",
+        "Hot",
+        "No",
+    ],
+    [
+        2,
+        "Same profile, engagement >6 months old",
+        8,
+        100,
+        95,
+        0,
+        "8×.4+100×.25+95×.2+0×.15=47.2",
+        "Warm",
+        "No",
+    ],
+    [
+        3,
+        "Junior analyst, 15 responses in 30 days",
+        92,
+        35,
+        15,
+        90,
+        "92×.4+35×.25+15×.2+90×.15=62.1",
+        "Warm",
+        "No",
+    ],
+    [
+        4,
+        "CISO Fortune 500, zero engagement",
+        0,
+        100,
+        85,
+        0,
+        "0×.4+100×.25+85×.2+0×.15=42.0",
+        "Nurture",
+        "No",
+    ],
+    [
+        5,
+        "Competitor, high engagement",
+        88,
+        40,
+        15,
+        60,
+        "88×.4+40×.25+15×.2+60×.15=57.2",
+        "Warm",
+        "YES — Competitor",
+    ],
+    [
+        6,
+        "Bounced+opted out, recent event",
+        70,
+        45,
+        15,
+        50,
+        "70×.4+45×.25+15×.2+50×.15=49.8",
+        "Warm",
+        "YES — Bounced+OptOut",
+    ],
+    [
+        7,
+        "Broken conversion link, split engagement",
+        30,
+        60,
+        15,
+        0,
+        "30×.4+60×.25+15×.2+0×.15=30.0",
+        "Nurture",
+        "No — but DQ flagged",
+    ],
+    [
+        8,
+        "40 campaigns, 38 auto emails (DQ-8)",
+        12,
+        50,
+        15,
+        0,
+        "12×.4+50×.25+15×.2+0×.15=20.3",
+        "Nurture",
+        "No",
+    ],
+    [
+        9,
+        "Re-MQL'd 4 times (cycling)",
+        55,
+        45,
+        15,
+        40,
+        "55×.4+45×.25+15×.2+40×.15=42.3",
+        "Nurture",
+        "No",
+    ],
+    [
+        10,
+        "CC contact, high-intent named acct, 2 form fills",
+        60,
+        70,
+        90,
+        45,
+        "60×.4+70×.25+90×.2+45×.15=66.3",
+        "Warm",
+        "No",
+    ],
 ]
 for i, row in enumerate(examples_full, start=3):
     for j, val in enumerate(row, start=1):
@@ -413,7 +577,9 @@ for i, row in enumerate(examples_full, start=3):
 style_header(ws7, 3, 9)
 
 ws7["A15"] = "NOTE: Scores are approximate — actual values depend on exact feature calculations."
-ws7["A16"] = "The formula column shows: (Eng×0.4) + (Profile×0.25) + (Account×0.2) + (Momentum×0.15)"
+ws7["A16"] = (
+    "The formula column shows: (Eng×0.4) + (Profile×0.25) + (Account×0.2) + (Momentum×0.15)"
+)
 
 auto_width(ws7)
 ws7.column_dimensions["B"].width = 40

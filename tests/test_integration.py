@@ -2,6 +2,7 @@
 Integration test: runs the full pipeline end-to-end on a small dataset.
 Verifies that all layers compose correctly and produce valid output.
 """
+
 import os
 import sys
 import tempfile
@@ -72,7 +73,9 @@ class TestFullPipeline:
         from src.pipeline.run_pipeline import run_pipeline
 
         weights = ScoringWeights(engagement=0.6, profile=0.15, account=0.15, momentum=0.1)
-        result = run_pipeline(data_dir=mini_pipeline_dir, output_dir=mini_pipeline_dir, weights=weights)
+        result = run_pipeline(
+            data_dir=mini_pipeline_dir, output_dir=mini_pipeline_dir, weights=weights
+        )
 
         assert len(result) == 5
         assert result["readiness_score"].notna().all()
@@ -82,7 +85,9 @@ class TestFullPipeline:
         from src.pipeline.stages.rank import TierConfig
 
         config = TierConfig(hot_threshold=90, warm_threshold=60, nurture_threshold=30)
-        result = run_pipeline(data_dir=mini_pipeline_dir, output_dir=mini_pipeline_dir, tier_config=config)
+        result = run_pipeline(
+            data_dir=mini_pipeline_dir, output_dir=mini_pipeline_dir, tier_config=config
+        )
 
         assert len(result) == 5
 

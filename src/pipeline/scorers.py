@@ -4,6 +4,7 @@ Scorer strategies implementing the Strategy Pattern.
 Each scorer is a pluggable algorithm that computes one dimension of readiness.
 The composite score is assembled by the ScoringEngine using weights.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -31,6 +32,7 @@ class ScorerStrategy(ABC):
 @dataclass(frozen=True)
 class EngagementScoringConfig:
     """Tunable parameters for engagement scoring."""
+
     half_life_days: float = 45.0
     volume_weight_30d: float = 20.0
     volume_weight_90d: float = 5.0
@@ -65,8 +67,8 @@ class EngagementScorer(ScorerStrategy):
             recency_score = 100.0 * np.exp(-0.693 * days_since / cfg.half_life_days)
 
         volume_score = min(
-            row["engagement_last_30d"] * cfg.volume_weight_30d +
-            row["engagement_last_90d"] * cfg.volume_weight_90d,
+            row["engagement_last_30d"] * cfg.volume_weight_30d
+            + row["engagement_last_90d"] * cfg.volume_weight_90d,
             100.0,
         )
 
@@ -78,16 +80,18 @@ class EngagementScorer(ScorerStrategy):
         automation_penalty = row["automation_ratio"] * cfg.automation_penalty_factor
 
         high_value = (
-            row["webinar_attendances"] * cfg.webinar_value +
-            row["event_attendances"] * cfg.event_value +
-            row["content_responses"] * cfg.content_value
+            row["webinar_attendances"] * cfg.webinar_value
+            + row["event_attendances"] * cfg.event_value
+            + row["content_responses"] * cfg.content_value
         )
         high_value_bonus = min(high_value, cfg.high_value_cap)
 
         raw = (
-            recency_score * cfg.recency_weight +
-            volume_score * cfg.volume_weight +
-            diversity_bonus + high_value_bonus - automation_penalty
+            recency_score * cfg.recency_weight
+            + volume_score * cfg.volume_weight
+            + diversity_bonus
+            + high_value_bonus
+            - automation_penalty
         )
         return float(np.clip(raw, 0, 100))
 

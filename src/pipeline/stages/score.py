@@ -5,6 +5,7 @@ Computes four independent score components and combines into a single readiness 
 Each scoring function takes a row (Series) and returns a float 0-100.
 The final readiness_score is a weighted sum.
 """
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -16,6 +17,7 @@ from src.pipeline.logging_config import logger
 @dataclass(frozen=True)
 class ScoringWeights:
     """Configurable weights for the composite score."""
+
     engagement: float = 0.40
     profile: float = 0.25
     account: float = 0.20
@@ -29,6 +31,7 @@ class ScoringWeights:
 @dataclass(frozen=True)
 class EngagementScoringConfig:
     """Tunable parameters for engagement scoring."""
+
     half_life_days: float = 45.0
     volume_weight_30d: float = 20.0
     volume_weight_90d: float = 5.0
@@ -47,7 +50,9 @@ DEFAULT_WEIGHTS = ScoringWeights()
 DEFAULT_ENGAGEMENT_CONFIG = EngagementScoringConfig()
 
 
-def score_engagement(row: pd.Series, config: EngagementScoringConfig = DEFAULT_ENGAGEMENT_CONFIG) -> float:
+def score_engagement(
+    row: pd.Series, config: EngagementScoringConfig = DEFAULT_ENGAGEMENT_CONFIG
+) -> float:
     """Engagement recency score (0-100). Rewards recent real engagement, penalizes staleness.
 
     Uses exponential decay: score = 100 * exp(-ln2 * days / half_life)
@@ -65,7 +70,9 @@ def score_engagement(row: pd.Series, config: EngagementScoringConfig = DEFAULT_E
         recency_score = 100.0 * np.exp(-0.693 * days_since / config.half_life_days)
 
     # Volume component (diminishing returns via cap)
-    volume_score = min(eng_30d * config.volume_weight_30d + eng_90d * config.volume_weight_90d, 100.0)
+    volume_score = min(
+        eng_30d * config.volume_weight_30d + eng_90d * config.volume_weight_90d, 100.0
+    )
 
     # Diversity bonus
     diversity_bonus = min(diversity * config.diversity_bonus_per_type, config.diversity_cap)
@@ -75,14 +82,19 @@ def score_engagement(row: pd.Series, config: EngagementScoringConfig = DEFAULT_E
 
     # High-value engagement bonus
     high_value = (
-        row["webinar_attendances"] * config.webinar_value +
-        row["event_attendances"] * config.event_value +
-        row["content_responses"] * config.content_value
+        row["webinar_attendances"] * config.webinar_value
+        + row["event_attendances"] * config.event_value
+        + row["content_responses"] * config.content_value
     )
     high_value_bonus = min(high_value, config.high_value_cap)
 
-    raw = (recency_score * config.recency_weight + volume_score * config.volume_weight +
-           diversity_bonus + high_value_bonus - automation_penalty)
+    raw = (
+        recency_score * config.recency_weight
+        + volume_score * config.volume_weight
+        + diversity_bonus
+        + high_value_bonus
+        - automation_penalty
+    )
     return float(np.clip(raw, 0, 100))
 
 
@@ -127,7 +139,9 @@ def score_momentum(row: pd.Series) -> float:
     return float(np.clip(base + accel_bonus, 0, 100))
 
 
-def compute_scores(features_df: pd.DataFrame, weights: ScoringWeights = DEFAULT_WEIGHTS) -> pd.DataFrame:
+def compute_scores(
+    features_df: pd.DataFrame, weights: ScoringWeights = DEFAULT_WEIGHTS
+) -> pd.DataFrame:
     """Compute all component scores and the weighted composite readiness score."""
     weights.validate()
     logger.info("Layer 3: Component scoring...")
@@ -139,13 +153,15 @@ def compute_scores(features_df: pd.DataFrame, weights: ScoringWeights = DEFAULT_
     df["score_momentum"] = df.apply(score_momentum, axis=1)
 
     df["readiness_score"] = (
-        df["score_engagement"] * weights.engagement +
-        df["score_profile"] * weights.profile +
-        df["score_account"] * weights.account +
-        df["score_momentum"] * weights.momentum
+        df["score_engagement"] * weights.engagement
+        + df["score_profile"] * weights.profile
+        + df["score_account"] * weights.account
+        + df["score_momentum"] * weights.momentum
     ).round(1)
 
-    logger.info(f"Score distribution: mean={df['readiness_score'].mean():.1f}, "
-                f"median={df['readiness_score'].median():.1f}, "
-                f"std={df['readiness_score'].std():.1f}")
+    logger.info(
+        f"Score distribution: mean={df['readiness_score'].mean():.1f}, "
+        f"median={df['readiness_score'].median():.1f}, "
+        f"std={df['readiness_score'].std():.1f}"
+    )
     return df

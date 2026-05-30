@@ -2,7 +2,9 @@
 Lead/Contact Readiness Scoring Demo
 A self-hosted Streamlit application for exploring prioritized CRM records.
 """
+
 import os
+import subprocess
 import sys
 
 import pandas as pd
@@ -18,7 +20,6 @@ RAW_DIR = os.path.join(PROJECT_ROOT, "data", "raw")
 KB_DIR = os.path.join(PROJECT_ROOT, "docs", "knowledge-base")
 DOCS_DIR = os.path.join(PROJECT_ROOT, "docs")
 
-import subprocess
 
 if not os.path.exists(os.path.join(DATA_DIR, "scored_records.csv")):
     subprocess.run(
@@ -94,8 +95,13 @@ def render_sidebar(df):
     st.sidebar.subheader("Deep Dive", divider="blue")
     deep_page = st.sidebar.radio(
         "Deep Dive",
-        ["🧪 Persona Tester", "🎚️ Weight Explorer", "🔍 Record Inspector",
-         "📚 Methodology", "📖 Knowledge Base"],
+        [
+            "🧪 Persona Tester",
+            "🎚️ Weight Explorer",
+            "🔍 Record Inspector",
+            "📚 Methodology",
+            "📖 Knowledge Base",
+        ],
         index=None,
         label_visibility="collapsed",
         key="deep_nav",
@@ -118,10 +124,13 @@ def render_ranked_list(df):
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        tier_filter = st.multiselect("Tier", ["Hot", "Warm", "Nurture", "Cold"],
-                                     default=["Hot", "Warm"])
+        tier_filter = st.multiselect(
+            "Tier", ["Hot", "Warm", "Nurture", "Cold"], default=["Hot", "Warm"]
+        )
     with col2:
-        type_filter = st.multiselect("Entity Type", ["lead", "contact"], default=["lead", "contact"])
+        type_filter = st.multiselect(
+            "Entity Type", ["lead", "contact"], default=["lead", "contact"]
+        )
     with col3:
         show_excluded = st.checkbox("Show Excluded", value=False)
     with col4:
@@ -147,9 +156,21 @@ def render_ranked_list(df):
     filtered = filtered.copy()
     filtered["flags"] = filtered.apply(build_flags, axis=1)
 
-    display_cols = ["rank", "entity_id", "entity_type", "tier", "readiness_score",
-                    "first_name", "last_name", "title", "flags",
-                    "score_engagement", "score_profile", "score_account", "score_momentum"]
+    display_cols = [
+        "rank",
+        "entity_id",
+        "entity_type",
+        "tier",
+        "readiness_score",
+        "first_name",
+        "last_name",
+        "title",
+        "flags",
+        "score_engagement",
+        "score_profile",
+        "score_account",
+        "score_momentum",
+    ]
     display_cols = [c for c in display_cols if c in filtered.columns]
 
     st.dataframe(
@@ -158,12 +179,13 @@ def render_ranked_list(df):
         height=600,
         column_config={
             "readiness_score": st.column_config.ProgressColumn(
-                "Readiness", min_value=0, max_value=100, format="%.1f"),
+                "Readiness", min_value=0, max_value=100, format="%.1f"
+            ),
             "score_engagement": st.column_config.NumberColumn("Engagement", format="%.1f"),
             "score_profile": st.column_config.NumberColumn("Profile", format="%.1f"),
             "score_account": st.column_config.NumberColumn("Account", format="%.1f"),
             "score_momentum": st.column_config.NumberColumn("Momentum", format="%.1f"),
-        }
+        },
     )
 
     st.caption(f"Showing {min(max_rows, len(filtered))} of {len(filtered)} records")
@@ -171,11 +193,15 @@ def render_ranked_list(df):
 
 def render_record_inspector(df, cm_df):
     st.title("🔍 Record Inspector")
-    st.markdown("*Inspect individual records: profile, engagement history, score breakdown, DQ flags.*")
+    st.markdown(
+        "*Inspect individual records: profile, engagement history, score breakdown, DQ flags.*"
+    )
 
     scorable = df[~df["is_excluded"]].sort_values("readiness_score", ascending=False)
-    options = [f"#{r['rank']} | {r['entity_id']} | {r.get('first_name', '')} {r.get('last_name', '')} | Score: {r['readiness_score']}"
-               for _, r in scorable.head(200).iterrows()]
+    options = [
+        f"#{r['rank']} | {r['entity_id']} | {r.get('first_name', '')} {r.get('last_name', '')} | Score: {r['readiness_score']}"
+        for _, r in scorable.head(200).iterrows()
+    ]
 
     if not options:
         st.warning("No scorable records found.")
@@ -211,20 +237,34 @@ def render_record_inspector(df, cm_df):
 
     with col2:
         st.subheader("Score Breakdown")
-        fig = go.Figure(go.Bar(
-            x=[record["score_engagement"], record["score_profile"],
-               record["score_account"], record["score_momentum"]],
-            y=["Engagement (40%)", "Profile (25%)", "Account (20%)", "Momentum (15%)"],
-            orientation="h",
-            marker_color=["#FF6B6B", "#4ECDC4", "#45B7D1", "#96E6A1"],
-            text=[f"{v:.1f}" for v in [record["score_engagement"], record["score_profile"],
-                                        record["score_account"], record["score_momentum"]]],
-            textposition="inside",
-        ))
+        fig = go.Figure(
+            go.Bar(
+                x=[
+                    record["score_engagement"],
+                    record["score_profile"],
+                    record["score_account"],
+                    record["score_momentum"],
+                ],
+                y=["Engagement (40%)", "Profile (25%)", "Account (20%)", "Momentum (15%)"],
+                orientation="h",
+                marker_color=["#FF6B6B", "#4ECDC4", "#45B7D1", "#96E6A1"],
+                text=[
+                    f"{v:.1f}"
+                    for v in [
+                        record["score_engagement"],
+                        record["score_profile"],
+                        record["score_account"],
+                        record["score_momentum"],
+                    ]
+                ],
+                textposition="inside",
+            )
+        )
         fig.update_layout(
             title=f"Readiness Score: {record['readiness_score']:.1f} / 100 ({record['tier']})",
             xaxis_title="Component Score (0-100)",
-            height=250, margin=dict(l=0, r=0, t=40, b=0),
+            height=250,
+            margin=dict(l=0, r=0, t=40, b=0),
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -234,8 +274,9 @@ def render_record_inspector(df, cm_df):
     # Data Quality Flags
     st.subheader("Data Quality Flags")
     dq_cols = [c for c in record.index if c.startswith("dq_") and c != "dq_issue_count"]
-    active_flags = [c.replace("dq_", "").replace("_", " ").title()
-                    for c in dq_cols if record.get(c) is True]
+    active_flags = [
+        c.replace("dq_", "").replace("_", " ").title() for c in dq_cols if record.get(c) is True
+    ]
     if active_flags:
         st.warning(f"⚠️ DQ Issues ({len(active_flags)}): {', '.join(active_flags)}")
     else:
@@ -243,8 +284,11 @@ def render_record_inspector(df, cm_df):
 
     # Exclusion flags
     excl_cols = [c for c in record.index if c.startswith("exclude_")]
-    active_excl = [c.replace("exclude_", "").replace("_", " ").title()
-                   for c in excl_cols if record.get(c) is True]
+    active_excl = [
+        c.replace("exclude_", "").replace("_", " ").title()
+        for c in excl_cols
+        if record.get(c) is True
+    ]
     if active_excl:
         st.error(f"🚫 Exclusion Flags: {', '.join(active_excl)}")
 
@@ -252,9 +296,12 @@ def render_record_inspector(df, cm_df):
     st.subheader("Engagement History")
     entity_cm = cm_df[cm_df["entity_id"] == entity_id].sort_values("response_date", ascending=False)
     if len(entity_cm) > 0:
-        st.dataframe(entity_cm[["campaign_type", "campaign_name", "member_status",
-                                "is_responded", "response_date"]].head(20),
-                     use_container_width=True)
+        st.dataframe(
+            entity_cm[
+                ["campaign_type", "campaign_name", "member_status", "is_responded", "response_date"]
+            ].head(20),
+            use_container_width=True,
+        )
         st.caption(f"Showing {min(20, len(entity_cm))} of {len(entity_cm)} campaign memberships")
     else:
         st.info("No campaign engagement history found")
@@ -267,45 +314,78 @@ def render_distribution(df):
 
     col1, col2 = st.columns(2)
     with col1:
-        fig = px.histogram(scorable, x="readiness_score", color="tier",
-                          nbins=30, title="Readiness Score Distribution by Tier",
-                          color_discrete_map={"Hot": "#FF6B6B", "Warm": "#FFA94D",
-                                             "Nurture": "#74C0FC", "Cold": "#ADB5BD"})
+        fig = px.histogram(
+            scorable,
+            x="readiness_score",
+            color="tier",
+            nbins=30,
+            title="Readiness Score Distribution by Tier",
+            color_discrete_map={
+                "Hot": "#FF6B6B",
+                "Warm": "#FFA94D",
+                "Nurture": "#74C0FC",
+                "Cold": "#ADB5BD",
+            },
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        fig = px.histogram(scorable, x="readiness_score", color="entity_type",
-                          nbins=30, title="Score Distribution by Entity Type",
-                          color_discrete_map={"lead": "#4ECDC4", "contact": "#FF6B6B"})
+        fig = px.histogram(
+            scorable,
+            x="readiness_score",
+            color="entity_type",
+            nbins=30,
+            title="Score Distribution by Entity Type",
+            color_discrete_map={"lead": "#4ECDC4", "contact": "#FF6B6B"},
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     col3, col4 = st.columns(2)
     with col3:
-        scatter_df = scorable.dropna(subset=["score_engagement", "score_profile", "readiness_score"])
-        fig = px.scatter(scatter_df, x="score_engagement", y="score_profile",
-                        color="tier", size="readiness_score",
-                        title="Engagement vs Profile (size = readiness)",
-                        color_discrete_map={"Hot": "#FF6B6B", "Warm": "#FFA94D",
-                                           "Nurture": "#74C0FC", "Cold": "#ADB5BD"})
+        scatter_df = scorable.dropna(
+            subset=["score_engagement", "score_profile", "readiness_score"]
+        )
+        fig = px.scatter(
+            scatter_df,
+            x="score_engagement",
+            y="score_profile",
+            color="tier",
+            size="readiness_score",
+            title="Engagement vs Profile (size = readiness)",
+            color_discrete_map={
+                "Hot": "#FF6B6B",
+                "Warm": "#FFA94D",
+                "Nurture": "#74C0FC",
+                "Cold": "#ADB5BD",
+            },
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     with col4:
-        tier_stats = scorable.groupby("tier").agg(
-            count=("readiness_score", "count"),
-            avg_score=("readiness_score", "mean"),
-            avg_engagement=("score_engagement", "mean"),
-            avg_profile=("score_profile", "mean"),
-        ).round(1)
+        tier_stats = (
+            scorable.groupby("tier")
+            .agg(
+                count=("readiness_score", "count"),
+                avg_score=("readiness_score", "mean"),
+                avg_engagement=("score_engagement", "mean"),
+                avg_profile=("score_profile", "mean"),
+            )
+            .round(1)
+        )
         st.dataframe(tier_stats, use_container_width=True)
 
     # Entity type fairness check
     st.subheader("Entity Type Fairness")
-    fairness = scorable.groupby("entity_type").agg(
-        count=("readiness_score", "count"),
-        mean_score=("readiness_score", "mean"),
-        median_score=("readiness_score", "median"),
-        pct_hot=("tier", lambda x: (x == "Hot").mean() * 100),
-    ).round(1)
+    fairness = (
+        scorable.groupby("entity_type")
+        .agg(
+            count=("readiness_score", "count"),
+            mean_score=("readiness_score", "mean"),
+            median_score=("readiness_score", "median"),
+            pct_hot=("tier", lambda x: (x == "Hot").mean() * 100),
+        )
+        .round(1)
+    )
     fairness.columns = ["Count", "Mean Score", "Median Score", "% Hot Tier"]
     st.dataframe(fairness, use_container_width=True)
 
@@ -458,10 +538,17 @@ def render_weight_explorer(df):
         return
 
     # Normalize
-    w_eng_n, w_prof_n, w_acc_n, w_mom_n = w_eng / total, w_prof / total, w_acc / total, w_mom / total
+    w_eng_n, w_prof_n, w_acc_n, w_mom_n = (
+        w_eng / total,
+        w_prof / total,
+        w_acc / total,
+        w_mom / total,
+    )
 
-    st.markdown(f"**Normalized:** Engagement={w_eng_n:.2f} | Profile={w_prof_n:.2f} | "
-                f"Account={w_acc_n:.2f} | Momentum={w_mom_n:.2f}")
+    st.markdown(
+        f"**Normalized:** Engagement={w_eng_n:.2f} | Profile={w_prof_n:.2f} | "
+        f"Account={w_acc_n:.2f} | Momentum={w_mom_n:.2f}"
+    )
 
     # Tier thresholds
     st.subheader("Tier Thresholds")
@@ -476,10 +563,10 @@ def render_weight_explorer(df):
     # Re-score with new weights
 
     scorable["new_score"] = (
-        scorable["score_engagement"] * w_eng_n +
-        scorable["score_profile"] * w_prof_n +
-        scorable["score_account"] * w_acc_n +
-        scorable["score_momentum"] * w_mom_n
+        scorable["score_engagement"] * w_eng_n
+        + scorable["score_profile"] * w_prof_n
+        + scorable["score_account"] * w_acc_n
+        + scorable["score_momentum"] * w_mom_n
     ).round(2)
 
     def assign_tier(score):
@@ -520,16 +607,27 @@ def render_weight_explorer(df):
     # Top 10 comparison
     st.subheader("New Top 10 (with your weights)")
     top10 = scorable.head(10)
-    display_cols = ["new_rank", "entity_type", "first_name", "last_name", "title",
-                    "new_score", "new_tier", "score_engagement", "score_profile",
-                    "score_account", "score_momentum"]
+    display_cols = [
+        "new_rank",
+        "entity_type",
+        "first_name",
+        "last_name",
+        "title",
+        "new_score",
+        "new_tier",
+        "score_engagement",
+        "score_profile",
+        "score_account",
+        "score_momentum",
+    ]
     display_cols = [c for c in display_cols if c in top10.columns]
     st.dataframe(
         top10[display_cols],
         use_container_width=True,
         column_config={
             "new_score": st.column_config.ProgressColumn(
-                "New Score", min_value=0, max_value=100, format="%.1f"),
+                "New Score", min_value=0, max_value=100, format="%.1f"
+            ),
         },
     )
 
@@ -540,20 +638,41 @@ def render_weight_explorer(df):
     new_dist = scorable["new_tier"].value_counts().reindex(tier_order, fill_value=0)
 
     compare_df = pd.DataFrame({"Default Weights": old_dist, "Your Weights": new_dist})
-    fig = go.Figure(data=[
-        go.Bar(name="Default (0.4/0.25/0.2/0.15)", x=tier_order, y=compare_df["Default Weights"],
-               marker_color=["#FF6B6B", "#FFA94D", "#74C0FC", "#ADB5BD"]),
-        go.Bar(name="Your Weights", x=tier_order, y=compare_df["Your Weights"],
-               marker_color=["#FF3333", "#FF8800", "#3399FF", "#888888"]),
-    ])
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                name="Default (0.4/0.25/0.2/0.15)",
+                x=tier_order,
+                y=compare_df["Default Weights"],
+                marker_color=["#FF6B6B", "#FFA94D", "#74C0FC", "#ADB5BD"],
+            ),
+            go.Bar(
+                name="Your Weights",
+                x=tier_order,
+                y=compare_df["Your Weights"],
+                marker_color=["#FF3333", "#FF8800", "#3399FF", "#888888"],
+            ),
+        ]
+    )
     fig.update_layout(barmode="group", height=350, title="Tier Counts: Before vs After")
     st.plotly_chart(fig, use_container_width=True)
 
     # Biggest movers
     st.subheader("Biggest Rank Movers (who benefited most?)")
     movers = scorable.nlargest(10, "rank_change")[
-        ["entity_id", "first_name", "last_name", "title", "rank", "new_rank", "rank_change",
-         "score_engagement", "score_profile", "score_account", "score_momentum"]
+        [
+            "entity_id",
+            "first_name",
+            "last_name",
+            "title",
+            "rank",
+            "new_rank",
+            "rank_change",
+            "score_engagement",
+            "score_profile",
+            "score_account",
+            "score_momentum",
+        ]
     ]
     movers_display = [c for c in movers.columns if c in scorable.columns]
     st.dataframe(movers[movers_display], use_container_width=True, hide_index=True)
@@ -708,14 +827,19 @@ def render_persona_tester(df, cm_df):
             if is_excluded:
                 st.error("🚫 **EXCLUDED** — removed from callable pool")
                 excl_cols = [c for c in record.index if c.startswith("exclude_")]
-                reasons = [c.replace("exclude_", "").replace("_", " ").title()
-                           for c in excl_cols if record.get(c) is True]
+                reasons = [
+                    c.replace("exclude_", "").replace("_", " ").title()
+                    for c in excl_cols
+                    if record.get(c) is True
+                ]
                 if reasons:
                     st.markdown(f"Exclusion reasons: {', '.join(reasons)}")
             else:
                 tier = record.get("tier", "Unknown")
                 tier_colors = {"Hot": "🔥", "Warm": "🟠", "Nurture": "🔵", "Cold": "❄️"}
-                st.success(f"{tier_colors.get(tier, '')} **Tier: {tier}** — Score: {record['readiness_score']:.1f}/100")
+                st.success(
+                    f"{tier_colors.get(tier, '')} **Tier: {tier}** — Score: {record['readiness_score']:.1f}/100"
+                )
 
             c1, c2, c3, c4 = st.columns(4)
             c1.metric("Engagement", f"{record.get('score_engagement', 0):.0f}")
@@ -725,8 +849,11 @@ def render_persona_tester(df, cm_df):
 
             # DQ Flags
             dq_cols = [c for c in record.index if c.startswith("dq_") and c != "dq_issue_count"]
-            active_dq = [c.replace("dq_", "").replace("_", " ").title()
-                         for c in dq_cols if record.get(c) is True]
+            active_dq = [
+                c.replace("dq_", "").replace("_", " ").title()
+                for c in dq_cols
+                if record.get(c) is True
+            ]
             if active_dq:
                 st.warning(f"⚠️ DQ Flags: {', '.join(active_dq)}")
         else:
@@ -737,7 +864,9 @@ def render_persona_tester(df, cm_df):
         st.markdown("---")
         st.subheader("Engagement History")
         entity_id_val = record_match.iloc[0].get("entity_id", entity_id)
-        entity_cm = cm_df[cm_df["entity_id"] == entity_id_val].sort_values("response_date", ascending=False)
+        entity_cm = cm_df[cm_df["entity_id"] == entity_id_val].sort_values(
+            "response_date", ascending=False
+        )
         if len(entity_cm) > 0:
             responded = entity_cm[entity_cm["is_responded"]]
             auto = entity_cm[~entity_cm["is_responded"]]
@@ -745,9 +874,18 @@ def render_persona_tester(df, cm_df):
             c1.metric("Total Memberships", len(entity_cm))
             c2.metric("Real Responses", len(responded))
             c3.metric("Auto/Sent Only", len(auto))
-            st.dataframe(entity_cm[["campaign_type", "campaign_name", "member_status",
-                                    "is_responded", "response_date"]].head(15),
-                         use_container_width=True)
+            st.dataframe(
+                entity_cm[
+                    [
+                        "campaign_type",
+                        "campaign_name",
+                        "member_status",
+                        "is_responded",
+                        "response_date",
+                    ]
+                ].head(15),
+                use_container_width=True,
+            )
         else:
             st.info("No campaign memberships found for this record.")
 
@@ -766,19 +904,27 @@ def render_persona_tester(df, cm_df):
                 match = type_recs.iloc[[pidx]]
         if len(match) > 0:
             r = match.iloc[0]
-            summary_rows.append({
-                "Persona": p["id"],
-                "Name": p["name"].split("—")[0].strip() if "—" in p["name"] else p["name"][:25],
-                "Score": f"{r.get('readiness_score', 0):.0f}",
-                "Tier": "EXCLUDED" if r.get("is_excluded", False) else r.get("tier", "?"),
-                "Expected": p["expected_tier"],
-                "Match": "✅" if (
-                    (r.get("is_excluded", False) and "EXCLUDED" in p["expected_tier"]) or
-                    (not r.get("is_excluded", False) and r.get("tier", "") in p["expected_tier"])
-                ) else "⚠️",
-            })
+            summary_rows.append(
+                {
+                    "Persona": p["id"],
+                    "Name": p["name"].split("—")[0].strip() if "—" in p["name"] else p["name"][:25],
+                    "Score": f"{r.get('readiness_score', 0):.0f}",
+                    "Tier": "EXCLUDED" if r.get("is_excluded", False) else r.get("tier", "?"),
+                    "Expected": p["expected_tier"],
+                    "Match": "✅"
+                    if (
+                        (r.get("is_excluded", False) and "EXCLUDED" in p["expected_tier"])
+                        or (
+                            not r.get("is_excluded", False)
+                            and r.get("tier", "") in p["expected_tier"]
+                        )
+                    )
+                    else "⚠️",
+                }
+            )
     if summary_rows:
         import pandas as pd_local
+
         st.dataframe(pd_local.DataFrame(summary_rows), use_container_width=True, hide_index=True)
 
 
@@ -850,7 +996,9 @@ def render_narrative(df, cm_df):
             "description": "Attends every webinar, downloads every whitepaper. Works at CrowdStrike.",
             "expectation": "**Should be: EXCLUDED — not scored low, completely removed from the callable pool**",
             "icon": "🚫",
-            "filter": lambda d: excluded[excluded.get("exclude_competitor", pd.Series(dtype=bool)).fillna(False)],
+            "filter": lambda d: excluded[
+                excluded.get("exclude_competitor", pd.Series(dtype=bool)).fillna(False)
+            ],
         },
     ]
 
@@ -875,8 +1023,18 @@ def render_narrative(df, cm_df):
     st.markdown("*The VP's ask: 'Give me the top people to call this week. Show me why.'*")
 
     top10 = scorable.head(10)
-    display_cols = ["rank", "entity_type", "first_name", "last_name", "title",
-                    "readiness_score", "tier", "score_engagement", "score_profile", "score_account"]
+    display_cols = [
+        "rank",
+        "entity_type",
+        "first_name",
+        "last_name",
+        "title",
+        "readiness_score",
+        "tier",
+        "score_engagement",
+        "score_profile",
+        "score_account",
+    ]
     display_cols = [c for c in display_cols if c in top10.columns]
     st.dataframe(top10[display_cols], use_container_width=True, height=400)
 
@@ -890,7 +1048,9 @@ def render_narrative(df, cm_df):
 
 def render_knowledge_base():
     st.title("📖 Knowledge Base")
-    st.markdown("*Discovery notes, design decisions, and lessons learned from building this system.*")
+    st.markdown(
+        "*Discovery notes, design decisions, and lessons learned from building this system.*"
+    )
 
     docs = load_knowledge_base()
     tabs = st.tabs(list(docs.keys()))

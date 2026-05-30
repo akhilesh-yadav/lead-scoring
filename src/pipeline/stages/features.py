@@ -3,6 +3,7 @@ Layer 2: Feature Engineering
 Transforms raw CRM data into scoring-ready features.
 Key dimensions: engagement recency, profile fit, account strength, behavioral momentum.
 """
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional
@@ -14,12 +15,21 @@ from src.pipeline.logging_config import logger
 DEFAULT_REFERENCE_DATE = datetime(2025, 5, 15)
 
 LEVEL_SCORES = {
-    "C-Level": 1.0, "VP": 0.85, "Director": 0.7,
-    "Manager": 0.5, "Individual Contributor": 0.3, None: 0.2,
+    "C-Level": 1.0,
+    "VP": 0.85,
+    "Director": 0.7,
+    "Manager": 0.5,
+    "Individual Contributor": 0.3,
+    None: 0.2,
 }
 PERSONA_SCORES = {
-    "CISO": 1.0, "Technical Buyer": 0.9, "Financial Buyer": 0.7,
-    "IT Operations": 0.6, "Security Engineer": 0.5, None: 0.2, "Non-Prospect": 0.0,
+    "CISO": 1.0,
+    "Technical Buyer": 0.9,
+    "Financial Buyer": 0.7,
+    "IT Operations": 0.6,
+    "Security Engineer": 0.5,
+    None: 0.2,
+    "Non-Prospect": 0.0,
 }
 
 
@@ -82,8 +92,8 @@ def compute_engagement_features(
 ) -> EngagementFeatures:
     """Compute engagement features for a single entity from campaign member records."""
     cm = campaign_members[
-        (campaign_members["entity_id"] == entity_id) &
-        (campaign_members["entity_type"] == entity_type)
+        (campaign_members["entity_id"] == entity_id)
+        & (campaign_members["entity_type"] == entity_type)
     ].copy()
 
     if len(cm) == 0:
@@ -106,9 +116,15 @@ def compute_engagement_features(
         days_since_last_engagement=days_since,
         automation_ratio=len(auto_cm) / max(len(cm), 1),
         campaign_type_diversity=cm["campaign_type"].nunique(),
-        webinar_attendances=int(((cm["campaign_type"] == "Webinar") & (cm["member_status"] == "Attended")).sum()),
-        event_attendances=int(((cm["campaign_type"] == "Event") & (cm["member_status"] == "Attended")).sum()),
-        content_responses=int(((cm["campaign_type"] == "Content Syndication") & (cm["is_responded"])).sum()),
+        webinar_attendances=int(
+            ((cm["campaign_type"] == "Webinar") & (cm["member_status"] == "Attended")).sum()
+        ),
+        event_attendances=int(
+            ((cm["campaign_type"] == "Event") & (cm["member_status"] == "Attended")).sum()
+        ),
+        content_responses=int(
+            ((cm["campaign_type"] == "Content Syndication") & (cm["is_responded"])).sum()
+        ),
     )
 
 
@@ -160,8 +176,8 @@ def compute_momentum_features(
 ) -> MomentumFeatures:
     """Is engagement accelerating? Compares last-30-day vs prior-30-day volume."""
     cm = campaign_members[
-        (campaign_members["entity_id"] == entity_id) &
-        (campaign_members["entity_type"] == entity_type)
+        (campaign_members["entity_id"] == entity_id)
+        & (campaign_members["entity_type"] == entity_type)
     ].copy()
 
     real_cm = cm[cm["is_responded"]].copy()
@@ -199,23 +215,43 @@ def engineer_features(
 
     for _, lead in leads.iterrows():
         eng = compute_engagement_features(lead["lead_id"], "lead", campaign_members, reference_date)
-        prof = compute_profile_features(lead.get("job_level"), lead.get("job_persona"), lead.get("title"))
+        prof = compute_profile_features(
+            lead.get("job_level"), lead.get("job_persona"), lead.get("title")
+        )
         acct = AccountFeatures()
         mom = compute_momentum_features(lead["lead_id"], "lead", campaign_members, reference_date)
-        all_features.append({
-            **eng.to_dict(), **prof.to_dict(), **acct.to_dict(), **mom.to_dict(),
-            "entity_id": lead["lead_id"], "entity_type": "lead",
-        })
+        all_features.append(
+            {
+                **eng.to_dict(),
+                **prof.to_dict(),
+                **acct.to_dict(),
+                **mom.to_dict(),
+                "entity_id": lead["lead_id"],
+                "entity_type": "lead",
+            }
+        )
 
     for _, contact in contacts.iterrows():
-        eng = compute_engagement_features(contact["contact_id"], "contact", campaign_members, reference_date)
-        prof = compute_profile_features(contact.get("job_level"), contact.get("job_persona"), contact.get("title"))
+        eng = compute_engagement_features(
+            contact["contact_id"], "contact", campaign_members, reference_date
+        )
+        prof = compute_profile_features(
+            contact.get("job_level"), contact.get("job_persona"), contact.get("title")
+        )
         acct = compute_account_features(contact.get("account_id"), accounts)
-        mom = compute_momentum_features(contact["contact_id"], "contact", campaign_members, reference_date)
-        all_features.append({
-            **eng.to_dict(), **prof.to_dict(), **acct.to_dict(), **mom.to_dict(),
-            "entity_id": contact["contact_id"], "entity_type": "contact",
-        })
+        mom = compute_momentum_features(
+            contact["contact_id"], "contact", campaign_members, reference_date
+        )
+        all_features.append(
+            {
+                **eng.to_dict(),
+                **prof.to_dict(),
+                **acct.to_dict(),
+                **mom.to_dict(),
+                "entity_id": contact["contact_id"],
+                "entity_type": "contact",
+            }
+        )
 
     features_df = pd.DataFrame(all_features)
     logger.info(f"Engineered features for {len(features_df)} records")

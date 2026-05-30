@@ -6,6 +6,7 @@ Usage:
     python -m lead_scorer demo [--port 8501]
     python -m lead_scorer validate
 """
+
 import argparse
 import os
 import sys
@@ -43,8 +44,10 @@ def cmd_generate(args):
     contacts.to_csv(os.path.join(output_dir, "contacts.csv"), index=False)
     campaign_members.to_csv(os.path.join(output_dir, "campaign_members.csv"), index=False)
 
-    print(f"Generated: {len(accounts)} accounts, {len(leads)} leads, "
-          f"{len(contacts)} contacts, {len(campaign_members)} campaign members")
+    print(
+        f"Generated: {len(accounts)} accounts, {len(leads)} leads, "
+        f"{len(contacts)} contacts, {len(campaign_members)} campaign members"
+    )
     print(f"Output: {output_dir}")
 
 
@@ -65,32 +68,45 @@ def cmd_score(args):
         warm_threshold=args.warm,
         nurture_threshold=args.nurture,
     )
-    run_pipeline(data_dir=args.data_dir, output_dir=args.output_dir, weights=weights, tier_config=tiers)
+    run_pipeline(
+        data_dir=args.data_dir, output_dir=args.output_dir, weights=weights, tier_config=tiers
+    )
 
 
 def cmd_demo(args):
     """Launch the Streamlit demo application."""
     import subprocess
+
     app_path = os.path.join(PROJECT_ROOT, "src", "app", "main.py")
-    subprocess.run([
-        sys.executable, "-m", "streamlit", "run", app_path,
-        "--server.port", str(args.port),
-        "--server.headless", "true",
-    ])
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            app_path,
+            "--server.port",
+            str(args.port),
+            "--server.headless",
+            "true",
+        ]
+    )
 
 
 def cmd_validate(args):
     """Run tests and validation."""
     import subprocess
-    subprocess.run([sys.executable, "-m", "pytest", "tests/", "-v", "--tb=short"],
-                   cwd=PROJECT_ROOT)
+
+    subprocess.run([sys.executable, "-m", "pytest", "tests/", "-v", "--tb=short"], cwd=PROJECT_ROOT)
 
 
 def parse_weights(s):
     """Parse comma-separated weights string into list of floats."""
     parts = [float(x) for x in s.split(",")]
     if len(parts) != 4:
-        raise argparse.ArgumentTypeError("Weights must be 4 comma-separated floats (e.g., 0.4,0.25,0.2,0.15)")
+        raise argparse.ArgumentTypeError(
+            "Weights must be 4 comma-separated floats (e.g., 0.4,0.25,0.2,0.15)"
+        )
     if abs(sum(parts) - 1.0) > 0.01:
         raise argparse.ArgumentTypeError(f"Weights must sum to 1.0, got {sum(parts)}")
     return parts
@@ -106,17 +122,31 @@ def main():
     # generate
     gen_parser = subparsers.add_parser("generate", help="Generate synthetic CRM data")
     gen_parser.add_argument("--leads", type=int, default=600, help="Number of leads (default: 600)")
-    gen_parser.add_argument("--contacts", type=int, default=400, help="Number of contacts (default: 400)")
+    gen_parser.add_argument(
+        "--contacts", type=int, default=400, help="Number of contacts (default: 400)"
+    )
     gen_parser.add_argument("--output", default=RAW_DIR, help="Output directory")
 
     # score
     score_parser = subparsers.add_parser("score", help="Run scoring pipeline")
-    score_parser.add_argument("--weights", type=parse_weights, default=[0.4, 0.25, 0.2, 0.15],
-                              help="Component weights: engagement,profile,account,momentum (default: 0.4,0.25,0.2,0.15)")
-    score_parser.add_argument("--half-life", type=float, default=45.0, help="Decay half-life in days (default: 45)")
-    score_parser.add_argument("--hot", type=float, default=70.0, help="Hot tier threshold (default: 70)")
-    score_parser.add_argument("--warm", type=float, default=45.0, help="Warm tier threshold (default: 45)")
-    score_parser.add_argument("--nurture", type=float, default=20.0, help="Nurture tier threshold (default: 20)")
+    score_parser.add_argument(
+        "--weights",
+        type=parse_weights,
+        default=[0.4, 0.25, 0.2, 0.15],
+        help="Component weights: engagement,profile,account,momentum (default: 0.4,0.25,0.2,0.15)",
+    )
+    score_parser.add_argument(
+        "--half-life", type=float, default=45.0, help="Decay half-life in days (default: 45)"
+    )
+    score_parser.add_argument(
+        "--hot", type=float, default=70.0, help="Hot tier threshold (default: 70)"
+    )
+    score_parser.add_argument(
+        "--warm", type=float, default=45.0, help="Warm tier threshold (default: 45)"
+    )
+    score_parser.add_argument(
+        "--nurture", type=float, default=20.0, help="Nurture tier threshold (default: 20)"
+    )
     score_parser.add_argument("--data-dir", default=RAW_DIR, help="Raw data directory")
     score_parser.add_argument("--output-dir", default=PROCESSED_DIR, help="Output directory")
 

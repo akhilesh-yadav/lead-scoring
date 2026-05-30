@@ -1,4 +1,5 @@
 """Tests for Layer 1: Cleaning & Entity Resolution."""
+
 import os
 import sys
 
@@ -20,44 +21,108 @@ from src.pipeline.stages.clean import (
 
 @pytest.fixture
 def sample_leads():
-    return pd.DataFrame([
-        {"lead_id": "L1", "email": "a@test.com", "company": "Acme", "has_opted_out": False,
-         "email_bounced": False, "job_persona": "CISO", "is_disqualified": False,
-         "is_converted": False, "converted_contact_id": None, "mql_date": None,
-         "lead_status": "New", "created_date": "2025-01-15", "title": "VP Security"},
-        {"lead_id": "L2", "email": "b@test.com", "company": "CrowdStrike", "has_opted_out": False,
-         "email_bounced": False, "job_persona": "Non-Prospect", "is_disqualified": False,
-         "is_converted": False, "converted_contact_id": None, "mql_date": None,
-         "lead_status": "New", "created_date": "2025-01-15", "title": None},
-        {"lead_id": "L3", "email": "c@test.com", "company": "BigCo", "has_opted_out": True,
-         "email_bounced": False, "job_persona": "Technical Buyer", "is_disqualified": False,
-         "is_converted": True, "converted_contact_id": None, "mql_date": "2024-12-01",
-         "lead_status": "Recycled", "created_date": "2025-01-15", "title": "Director"},
-        {"lead_id": "L4", "email": "a@test.com", "company": "AnotherCo", "has_opted_out": False,
-         "email_bounced": True, "job_persona": None, "is_disqualified": True,
-         "is_converted": False, "converted_contact_id": None, "mql_date": None,
-         "lead_status": "Disqualified", "created_date": "2025-03-01", "title": None},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "lead_id": "L1",
+                "email": "a@test.com",
+                "company": "Acme",
+                "has_opted_out": False,
+                "email_bounced": False,
+                "job_persona": "CISO",
+                "is_disqualified": False,
+                "is_converted": False,
+                "converted_contact_id": None,
+                "mql_date": None,
+                "lead_status": "New",
+                "created_date": "2025-01-15",
+                "title": "VP Security",
+            },
+            {
+                "lead_id": "L2",
+                "email": "b@test.com",
+                "company": "CrowdStrike",
+                "has_opted_out": False,
+                "email_bounced": False,
+                "job_persona": "Non-Prospect",
+                "is_disqualified": False,
+                "is_converted": False,
+                "converted_contact_id": None,
+                "mql_date": None,
+                "lead_status": "New",
+                "created_date": "2025-01-15",
+                "title": None,
+            },
+            {
+                "lead_id": "L3",
+                "email": "c@test.com",
+                "company": "BigCo",
+                "has_opted_out": True,
+                "email_bounced": False,
+                "job_persona": "Technical Buyer",
+                "is_disqualified": False,
+                "is_converted": True,
+                "converted_contact_id": None,
+                "mql_date": "2024-12-01",
+                "lead_status": "Recycled",
+                "created_date": "2025-01-15",
+                "title": "Director",
+            },
+            {
+                "lead_id": "L4",
+                "email": "a@test.com",
+                "company": "AnotherCo",
+                "has_opted_out": False,
+                "email_bounced": True,
+                "job_persona": None,
+                "is_disqualified": True,
+                "is_converted": False,
+                "converted_contact_id": None,
+                "mql_date": None,
+                "lead_status": "Disqualified",
+                "created_date": "2025-03-01",
+                "title": None,
+            },
+        ]
+    )
 
 
 @pytest.fixture
 def sample_contacts():
-    return pd.DataFrame([
-        {"contact_id": "C1", "email": "x@test.com", "account_id": "ACC-001",
-         "has_opted_out": False, "no_longer_with_company": False,
-         "job_persona": "CISO", "created_date": "2024-06-01", "title": "CISO"},
-        {"contact_id": "C2", "email": "a@test.com", "account_id": "ACC-002",
-         "has_opted_out": False, "no_longer_with_company": True,
-         "job_persona": "Technical Buyer", "created_date": "2024-06-01", "title": None},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "contact_id": "C1",
+                "email": "x@test.com",
+                "account_id": "ACC-001",
+                "has_opted_out": False,
+                "no_longer_with_company": False,
+                "job_persona": "CISO",
+                "created_date": "2024-06-01",
+                "title": "CISO",
+            },
+            {
+                "contact_id": "C2",
+                "email": "a@test.com",
+                "account_id": "ACC-002",
+                "has_opted_out": False,
+                "no_longer_with_company": True,
+                "job_persona": "Technical Buyer",
+                "created_date": "2024-06-01",
+                "title": None,
+            },
+        ]
+    )
 
 
 @pytest.fixture
 def sample_accounts():
-    return pd.DataFrame([
-        {"account_id": "ACC-001", "do_not_contact": False},
-        {"account_id": "ACC-002", "do_not_contact": True},
-    ])
+    return pd.DataFrame(
+        [
+            {"account_id": "ACC-001", "do_not_contact": False},
+            {"account_id": "ACC-002", "do_not_contact": True},
+        ]
+    )
 
 
 class TestLeadExclusions:
@@ -169,9 +234,16 @@ class TestEntityResolution:
         assert count == 0  # no match in this fixture
 
     def test_resolves_matching_email(self):
-        leads = pd.DataFrame([
-            {"lead_id": "L1", "email": "match@test.com", "is_converted": True, "converted_contact_id": None}
-        ])
+        leads = pd.DataFrame(
+            [
+                {
+                    "lead_id": "L1",
+                    "email": "match@test.com",
+                    "is_converted": True,
+                    "converted_contact_id": None,
+                }
+            ]
+        )
         leads["dq_broken_conversion"] = True
         contacts = pd.DataFrame([{"contact_id": "C99", "email": "match@test.com"}])
         resolved, count = resolve_broken_conversions(leads, contacts)

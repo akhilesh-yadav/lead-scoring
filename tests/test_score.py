@@ -1,4 +1,5 @@
 """Tests for Layer 3: Component Scoring."""
+
 import os
 import sys
 
@@ -86,7 +87,9 @@ class TestEngagementScoring:
 
     def test_time_decay_halflife(self):
         row_0 = make_row(days_since_last_engagement=0, engagement_last_30d=1)
-        row_45 = make_row(days_since_last_engagement=45, engagement_last_30d=0, engagement_last_90d=1)
+        row_45 = make_row(
+            days_since_last_engagement=45, engagement_last_30d=0, engagement_last_90d=1
+        )
         # At half-life, recency component should be ~half
         score_0 = score_engagement(row_0)
         score_45 = score_engagement(row_45)
@@ -137,14 +140,26 @@ class TestAccountScoring:
         assert score_account(row, lead_baseline=25.0) == 25.0
 
     def test_named_icp_high_intent(self):
-        row = make_row(has_account=1, account_is_named=1, account_is_icp=1,
-                       account_intent=0.8, account_employee_score=0.5, account_revenue_score=0.5)
+        row = make_row(
+            has_account=1,
+            account_is_named=1,
+            account_is_icp=1,
+            account_intent=0.8,
+            account_employee_score=0.5,
+            account_revenue_score=0.5,
+        )
         score = score_account(row)
         assert score > 70.0
 
     def test_weak_account(self):
-        row = make_row(has_account=1, account_is_named=0, account_is_icp=0,
-                       account_intent=0.1, account_employee_score=0.1, account_revenue_score=0.01)
+        row = make_row(
+            has_account=1,
+            account_is_named=0,
+            account_is_icp=0,
+            account_intent=0.1,
+            account_employee_score=0.1,
+            account_revenue_score=0.01,
+        )
         assert score_account(row) < 20.0
 
 
@@ -177,13 +192,26 @@ class TestScoringWeights:
 
 class TestComputeScores:
     def test_produces_readiness_score(self):
-        features = pd.DataFrame([
-            make_row(days_since_last_engagement=5, engagement_last_30d=2,
-                     campaign_type_diversity=2, level_score=0.7, persona_score=0.9,
-                     has_title=1, has_persona=1, has_account=1, account_is_named=1,
-                     account_is_icp=1, account_intent=0.7, momentum_score=1.0,
-                     is_accelerating=True, engagement_last_90d=3).to_dict()
-        ])
+        features = pd.DataFrame(
+            [
+                make_row(
+                    days_since_last_engagement=5,
+                    engagement_last_30d=2,
+                    campaign_type_diversity=2,
+                    level_score=0.7,
+                    persona_score=0.9,
+                    has_title=1,
+                    has_persona=1,
+                    has_account=1,
+                    account_is_named=1,
+                    account_is_icp=1,
+                    account_intent=0.7,
+                    momentum_score=1.0,
+                    is_accelerating=True,
+                    engagement_last_90d=3,
+                ).to_dict()
+            ]
+        )
         result = compute_scores(features)
         assert "readiness_score" in result.columns
         assert "score_engagement" in result.columns

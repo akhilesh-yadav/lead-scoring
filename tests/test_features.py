@@ -1,4 +1,5 @@
 """Tests for Layer 2: Feature Engineering."""
+
 import os
 import sys
 from datetime import datetime
@@ -22,28 +23,74 @@ REF_DATE = datetime(2025, 5, 15)
 
 @pytest.fixture
 def campaign_members():
-    return pd.DataFrame([
-        {"entity_id": "L1", "entity_type": "lead", "campaign_type": "Webinar",
-         "member_status": "Attended", "is_responded": True, "response_date": "2025-05-10"},
-        {"entity_id": "L1", "entity_type": "lead", "campaign_type": "Email",
-         "member_status": "Sent", "is_responded": False, "response_date": "2025-05-01"},
-        {"entity_id": "L1", "entity_type": "lead", "campaign_type": "Event",
-         "member_status": "Attended", "is_responded": True, "response_date": "2025-04-20"},
-        {"entity_id": "L2", "entity_type": "lead", "campaign_type": "Email",
-         "member_status": "Sent", "is_responded": False, "response_date": "2024-01-01"},
-        {"entity_id": "C1", "entity_type": "contact", "campaign_type": "Content Syndication",
-         "member_status": "Downloaded", "is_responded": True, "response_date": "2025-05-14"},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "entity_id": "L1",
+                "entity_type": "lead",
+                "campaign_type": "Webinar",
+                "member_status": "Attended",
+                "is_responded": True,
+                "response_date": "2025-05-10",
+            },
+            {
+                "entity_id": "L1",
+                "entity_type": "lead",
+                "campaign_type": "Email",
+                "member_status": "Sent",
+                "is_responded": False,
+                "response_date": "2025-05-01",
+            },
+            {
+                "entity_id": "L1",
+                "entity_type": "lead",
+                "campaign_type": "Event",
+                "member_status": "Attended",
+                "is_responded": True,
+                "response_date": "2025-04-20",
+            },
+            {
+                "entity_id": "L2",
+                "entity_type": "lead",
+                "campaign_type": "Email",
+                "member_status": "Sent",
+                "is_responded": False,
+                "response_date": "2024-01-01",
+            },
+            {
+                "entity_id": "C1",
+                "entity_type": "contact",
+                "campaign_type": "Content Syndication",
+                "member_status": "Downloaded",
+                "is_responded": True,
+                "response_date": "2025-05-14",
+            },
+        ]
+    )
 
 
 @pytest.fixture
 def accounts():
-    return pd.DataFrame([
-        {"account_id": "ACC-001", "is_icp_qualified": True, "is_named_account": True,
-         "intent_score": 80, "employee_count": 5000, "annual_revenue": 500e6},
-        {"account_id": "ACC-002", "is_icp_qualified": False, "is_named_account": False,
-         "intent_score": 20, "employee_count": 100, "annual_revenue": 5e6},
-    ])
+    return pd.DataFrame(
+        [
+            {
+                "account_id": "ACC-001",
+                "is_icp_qualified": True,
+                "is_named_account": True,
+                "intent_score": 80,
+                "employee_count": 5000,
+                "annual_revenue": 500e6,
+            },
+            {
+                "account_id": "ACC-002",
+                "is_icp_qualified": False,
+                "is_named_account": False,
+                "intent_score": 20,
+                "employee_count": 100,
+                "annual_revenue": 5e6,
+            },
+        ]
+    )
 
 
 class TestEngagementFeatures:
@@ -63,7 +110,7 @@ class TestEngagementFeatures:
 
     def test_automation_ratio(self, campaign_members):
         result = compute_engagement_features("L1", "lead", campaign_members, REF_DATE)
-        assert result.automation_ratio == pytest.approx(1/3, rel=0.01)  # 1 auto / 3 total
+        assert result.automation_ratio == pytest.approx(1 / 3, rel=0.01)  # 1 auto / 3 total
 
     def test_all_automation(self, campaign_members):
         result = compute_engagement_features("L2", "lead", campaign_members, REF_DATE)

@@ -4,6 +4,7 @@ ScoringPipeline — Composite pipeline orchestrator (Pipeline + Builder pattern)
 Composes PipelineStages into a configurable, reusable pipeline object.
 Supports adding/removing stages and swapping scorer strategies at runtime.
 """
+
 from __future__ import annotations
 
 import os
@@ -30,6 +31,7 @@ from src.pipeline.stages.rank import TierConfig, assign_tiers, merge_record_deta
 @dataclass(frozen=True)
 class ScoringWeights:
     """Configurable weights for the composite score. Must sum to 1.0."""
+
     engagement: float = 0.40
     profile: float = 0.25
     account: float = 0.20
@@ -144,8 +146,7 @@ class ScoringStage(PipelineStage):
             df[scorer.name] = df.apply(scorer.score, axis=1)
 
         df["readiness_score"] = sum(
-            df[scorer.name] * weight_map.get(scorer.name, 0)
-            for scorer in self._scorers
+            df[scorer.name] * weight_map.get(scorer.name, 0) for scorer in self._scorers
         ).round(1)
 
         return StageResult(
@@ -195,6 +196,7 @@ class RankingStage(PipelineStage):
 @dataclass
 class PipelineConfig:
     """All configuration for a scoring pipeline run."""
+
     data_dir: str = ""
     output_dir: str = ""
     weights: ScoringWeights = field(default_factory=ScoringWeights)
