@@ -64,16 +64,31 @@ def load_knowledge_base():
     return docs
 
 
+def _on_exec_change():
+    if st.session_state.get("exec_nav") is not None:
+        st.session_state["deep_nav"] = None
+
+
+def _on_deep_change():
+    if st.session_state.get("deep_nav") is not None:
+        st.session_state["exec_nav"] = None
+
+
 def render_sidebar(df):
     st.sidebar.title("🎯 Readiness Scorer")
     st.sidebar.markdown("---")
+
+    if "exec_nav" not in st.session_state and "deep_nav" not in st.session_state:
+        st.session_state["exec_nav"] = "🎬 The Story"
 
     st.sidebar.subheader("Executive View", divider="red")
     exec_page = st.sidebar.radio(
         "Executive",
         ["🎬 The Story", "📊 Ranked List", "📈 Score Distribution"],
+        index=None,
         label_visibility="collapsed",
         key="exec_nav",
+        on_change=_on_exec_change,
     )
 
     st.sidebar.subheader("Deep Dive", divider="blue")
@@ -84,9 +99,10 @@ def render_sidebar(df):
         index=None,
         label_visibility="collapsed",
         key="deep_nav",
+        on_change=_on_deep_change,
     )
 
-    page = deep_page if deep_page else exec_page
+    page = exec_page or deep_page or "🎬 The Story"
 
     st.sidebar.markdown("---")
     st.sidebar.metric("Total Records", len(df))
