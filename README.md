@@ -173,11 +173,14 @@ lead-scoring-poc/
 ├── skills/                          # Reusable skill definitions
 ├── lead_scorer/                     # Package entry for `python -m lead_scorer`
 ├── config.py                        # Environment-based configuration (dataclasses)
-├── pyproject.toml                   # PEP 621 packaging & tool config
+├── pyproject.toml                   # PEP 621 packaging & tool config (Python >=3.10)
+├── requirements.txt                 # Runtime deps for Streamlit Cloud / pip install
 ├── Makefile                         # One-command workflows (make data/score/test/app)
 ├── .github/workflows/ci.yml         # GitHub Actions CI pipeline
 ├── .pre-commit-config.yaml          # Automated linting on commit
 ├── Dockerfile                       # Container build for deployment
+├── Procfile                         # Heroku/Railway/Render process definition
+├── ARCHITECTURE.md                  # OOP pipeline design patterns & class hierarchy
 ├── CONTRIBUTING.md                  # Extension guide for developers
 └── README.md
 ```
@@ -438,7 +441,7 @@ TierConfig(hot_threshold=60, warm_threshold=35, nurture_threshold=15)
 
 ## Live Demo
 
-> **🔗 Live URL:** [https://lead-scoring-poc.onrender.com](https://lead-scoring-poc.onrender.com)
+> **🔗 Live URL:** [https://lead-scoring-poc.streamlit.app](https://lead-scoring-poc.streamlit.app/)
 >
 > *(Deploy your own with `make docker` or see [Deployment](#deployment) below)*
 
@@ -468,8 +471,12 @@ gcloud run deploy lead-scoring-poc \
 
 Uses `Procfile`:
 ```
-web: streamlit run app/main.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
+web: streamlit run src/app/main.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
 ```
+
+### Streamlit Community Cloud
+
+The app auto-generates data on first launch — no manual setup required. Just connect the repo and set `src/app/main.py` as the entrypoint.
 
 ---
 
@@ -515,10 +522,14 @@ Reusable skill definitions in `skills/`:
 ### Running Notebooks
 
 ```bash
+# Local
 cd notebooks
 jupyter notebook
-# Open 01_data_exploration.ipynb for EDA
-# Open 02_pipeline_walkthrough.ipynb for pipeline inspection
+
+# Or open directly in Google Colab (no local setup needed):
+# - 01_data_exploration.ipynb — EDA and DQ profiling
+# - 02_pipeline_walkthrough.ipynb — Step-by-step pipeline inspection
+# Click the "Open in Colab" badges at the top of this README.
 ```
 
 ---
