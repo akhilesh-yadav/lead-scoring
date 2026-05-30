@@ -18,6 +18,20 @@ RAW_DIR = os.path.join(PROJECT_ROOT, "data", "raw")
 KB_DIR = os.path.join(PROJECT_ROOT, "docs", "knowledge-base")
 DOCS_DIR = os.path.join(PROJECT_ROOT, "docs")
 
+import subprocess
+
+if not os.path.exists(os.path.join(DATA_DIR, "scored_records.csv")):
+    subprocess.run(
+        [sys.executable, "-m", "lead_scorer", "generate"],
+        cwd=PROJECT_ROOT,
+        check=True,
+    )
+    subprocess.run(
+        [sys.executable, "-m", "lead_scorer", "score"],
+        cwd=PROJECT_ROOT,
+        check=True,
+    )
+
 st.set_page_config(
     page_title="Lead Readiness Scoring",
     page_icon="🎯",
