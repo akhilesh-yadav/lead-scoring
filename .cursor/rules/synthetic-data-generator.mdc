@@ -1,0 +1,63 @@
+---
+description: Generates realistic synthetic CRM data (Salesforce object model) with configurable DQ issues, engagement distributions, and persona archetypes. Produces leads, contacts, accounts, campaign members CSVs. Use when generating synthetic data, creating test CRM data, simulating Salesforce records, or needs realistic B2B marketing data.
+globs: scripts/generate_data*,data/raw/**,**/synthetic*,**/generate*
+---
+
+# Synthetic CRM Data Generator
+
+## Quick Start
+
+```bash
+cd lead-scoring-poc
+python scripts/generate_data.py
+# Output: data/raw/accounts.csv, leads.csv, contacts.csv, campaign_members.csv
+```
+
+## Configuration
+
+```python
+NUM_ACCOUNTS = 200
+NUM_LEADS = 600
+NUM_CONTACTS = 400
+NUM_CAMPAIGN_MEMBERS = 4000
+```
+
+## Salesforce Object Model
+
+```
+Account (1) ←── (N) Contact
+                       ↑
+Lead ──── converts to ─┘
+Campaign (1) ←── (N) CampaignMember ──→ Lead OR Contact
+```
+
+## Injected DQ Patterns
+
+- DQ-1: Broken conversion links (~20% of converted)
+- DQ-2: Email duplication (~8% of leads)
+- DQ-4: ETL timestamp clustering (~80% of leads)
+- DQ-6: Non-prospect contamination (~13%)
+- DQ-8: Automation-inflated engagement (~60% of emails)
+
+## Engagement Distribution
+
+Zipf distribution (power law): most entities 1-3 memberships, some 10-20, outliers 30-50.
+
+## Required Test Personas (Appendix B)
+
+| # | Persona | Expected |
+|---|---------|----------|
+| 1 | VP Security, named account, 3 recent webinars | Hot |
+| 2 | Same profile, all engagement >6mo old | Mid/Low |
+| 3 | Junior analyst, 15 responses in 30 days | Mid/High |
+| 4 | CISO Fortune 500, zero engagement | Low |
+| 5 | Competitor employee, high engagement | Excluded |
+| 6 | Bounced + opted out + recent physical event | Edge case |
+| 7 | Broken conversion link, split engagement | Edge case |
+| 8 | 40 campaigns, 38 automated email sends | Mid/Low |
+| 9 | Re-MQL'd 4 times over 2 years | Ambiguous |
+| 10 | CC contact, high-intent account, 2 form fills | High |
+
+## Reproducibility
+
+All seeds fixed (`Faker.seed(42)`, `random.seed(42)`, `np.random.seed(42)`).

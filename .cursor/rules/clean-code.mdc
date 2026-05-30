@@ -1,0 +1,66 @@
+---
+description: Mandatory clean code working rules (Robert C. Martin). Enforces readability, maintainability, naming, function design, error handling, testing, and refactoring standards. Always active for all code changes.
+globs: src/**,tests/**,scripts/**,pipeline/**
+---
+
+# Clean Code Rules
+
+## Priority
+
+- Treat every rule as MUST unless marked otherwise
+- Prefer readability, maintainability, correctness over cleverness
+- Optimize for the next human reader
+- Apply the Boy Scout Rule: leave touched code cleaner than found
+
+## Naming
+
+- Use intention-revealing names
+- Avoid abbreviations unless domain-standard
+- One word per concept across the codebase
+- Classes = nouns; functions = verbs
+
+## Functions
+
+- Keep functions small, doing one thing
+- One level of abstraction per function
+- Minimize parameters; avoid boolean flags
+- Eliminate hidden side effects
+- Separate commands from queries
+
+## Comments
+
+- Improve code first, then decide if comment is needed
+- Good: non-obvious intent, warnings, rationale
+- Bad: redundant, obsolete, narrating code
+
+## Error Handling
+
+- Keep happy path readable
+- Provide diagnostic context in error messages
+- Prefer exceptions/result types over error codes
+- Do not return null when safer model exists
+
+## Tests
+
+- Treat tests as production-quality code
+- One main idea per test
+- Fast, isolated, self-checking, deterministic
+- Add tests for behavior changes and bug fixes
+
+## Refactoring
+
+- Small safe steps, preserve behavior
+- First make it work, then make it right
+- Remove duplication, dead code, misleading abstractions
+- Prefer simplest design passing all tests
+
+## Change Process
+
+1. Understand intent and affected behavior
+2. Identify simplest correct change
+3. Improve names before adding comments
+4. Keep edits localized
+5. Add/update tests
+6. Run validation
+7. Review diff for readability
+8. Ensure code is cleaner than before

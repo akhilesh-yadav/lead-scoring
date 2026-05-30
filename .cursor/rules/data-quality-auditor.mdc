@@ -1,0 +1,43 @@
+---
+description: Audits CRM/Salesforce data for quality issues across 10 DQ categories (broken links, duplication, temporal anomalies, contamination, completeness gaps, automation inflation). Produces structured findings reports. Use when auditing data quality, checking DQ issues, finding data problems, or CRM data profiling.
+globs: src/pipeline/stages/clean*,**/clean*,**/dq*,**/quality*,tests/test_clean*
+---
+
+# Data Quality Auditor
+
+## DQ Issue Taxonomy
+
+| ID | Category | Detection Method | Severity |
+|----|----------|-----------------|----------|
+| DQ-1 | Broken entity links | `is_converted=True` AND `converted_contact_id IS NULL` | High |
+| DQ-2 | Email duplication | Cross-entity email frequency analysis | Medium |
+| DQ-3 | Temporal field overwrites | MQL date present on Recycled/Disqualified records | Low |
+| DQ-4 | ETL-dominated timestamps | Date frequency > threshold (bulk-load detection) | Medium |
+| DQ-5 | Score field asymmetry | Different score scales across entity types | Medium |
+| DQ-6 | Non-prospect contamination | `job_persona = 'Non-Prospect'` + competitor company match | High |
+| DQ-7 | Data completeness gaps | NULL rates on critical fields (title, persona, phone) | Medium |
+| DQ-8 | Automation-inflated engagement | `campaign_type='Email' AND member_status='Sent'` ratio | High |
+| DQ-9 | Structural contact blocks | Opted-out, bounced, DNC flags | Critical |
+| DQ-10 | Qualification cycling | DQ→re-MQL pattern detection | Low |
+
+## Audit Workflow
+
+```python
+from src.pipeline.stages.clean import (
+    clean_data, load_data, flag_lead_exclusions,
+    flag_contact_exclusions, find_duplicate_emails,
+    detect_etl_dates, flag_lead_dq, flag_contact_dq,
+    get_dnc_accounts,
+)
+
+result = clean_data("./data/raw")
+print(result.resolution_stats)
+```
+
+## Key Principles
+
+- Flags over penalties: DQ issues are overlays, not score deductions
+- Exclusions are orthogonal: A record can be high-quality AND excluded
+- Threshold awareness: 5% duplication is noise, 30% is systemic
+- Entity-type sensitivity: Leads and contacts have different expected completeness
+- Automation is not engagement: Email sends without opens/clicks are not real behavior

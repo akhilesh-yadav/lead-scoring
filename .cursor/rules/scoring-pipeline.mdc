@@ -1,0 +1,75 @@
+---
+description: Configurable 4-layer readiness scoring pipeline for B2B CRM records. Transforms raw lead/contact data into ranked prioritization lists with explainable scores. Use when running scoring, configuring weights, adjusting tier thresholds, or modifying prioritization logic.
+globs: src/pipeline/**,pipeline/**,**/score*,**/scoring*,**/rank*
+---
+
+# Scoring Pipeline
+
+## Quick Start
+
+```bash
+python pipeline/run_pipeline.py
+# Reads: output/*.csv → Produces: output/scored_records.csv
+```
+
+## Architecture
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  L1: CLEAN  │───→│ L2: FEATURES│───→│  L3: SCORE  │───→│  L4: RANK   │
+│             │    │             │    │             │    │             │
+│ Exclusions  │    │ Engagement  │    │ 4 component │    │ Tier assign │
+│ DQ flags    │    │ Profile     │    │ scores 0-100│    │ Merge detail│
+│ Resolution  │    │ Account     │    │ Weighted    │    │ Sort & rank │
+│             │    │ Momentum    │    │ composite   │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
+## Configuration
+
+### Scoring Weights
+
+```python
+from src.pipeline.stages.score import ScoringWeights, compute_scores
+
+weights = ScoringWeights(
+    engagement=0.40,  # Time-decayed engagement recency
+    profile=0.25,     # ICP fit (title, seniority, persona)
+    account=0.20,     # Company-level signals
+    momentum=0.15,    # Engagement acceleration
+)
+
+scored = compute_scores(features_df, weights)
+```
+
+### Tier Thresholds
+
+```python
+from src.pipeline.stages.rank import TierConfig, rank_and_tier
+
+tiers = TierConfig(
+    hot_threshold=70.0,     # 70+ = call this week
+    warm_threshold=45.0,    # 45-69 = prioritize outreach
+    nurture_threshold=20.0, # 20-44 = marketing nurture
+)
+
+final = rank_and_tier(scored_df, leads, contacts, accounts, tiers)
+```
+
+## Component Scoring Functions
+
+Each returns a float 0-100:
+
+- `score_engagement(row)` — 40% weight: Exponential time-decay, volume bonus, campaign diversity, high-value engagement, automation penalty
+- `score_profile(row)` — 25% weight: Level score, persona score, completeness bonus
+- `score_account(row)` — 20% weight: Named account, ICP, intent, company size
+- `score_momentum(row)` — 15% weight: 30d vs prior-30d acceleration
+
+## Design Principles
+
+1. No circular dependency: MQL status is never an input to scoring
+2. Recency > volume: A single fresh engagement beats 50 old ones
+3. Orthogonal exclusions: Exclusions are flags, not score penalties
+4. Entity-type fairness: Leads get baseline account score
+5. Automation discounting: Only real human actions count
+6. Configurable everything: Weights, thresholds, decay curves are all parameters
