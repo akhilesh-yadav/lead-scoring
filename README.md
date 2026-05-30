@@ -1,5 +1,8 @@
 # Lead/Contact Readiness Scoring POC
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/akhilesh-yadav/lead-scoring/blob/main/notebooks/01_data_exploration.ipynb)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://lead-scoring-poc.streamlit.app/)
+
 A prioritization scoring system for B2B cybersecurity BDR teams. Replaces the legacy MQL flag with a multi-dimensional, time-aware, explainable **0-100 readiness score** to answer one question:
 
 > "Give me a ranked list of the top 500 people to call this week. Show me why."
